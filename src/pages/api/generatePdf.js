@@ -12,7 +12,12 @@ export default async function handler(req, res) {
     console.log("executablePathexecutablePath", await chromium.executablePath);
 
     const browser = await chromium.puppeteer.launch({
-      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+      args: [
+        ...chromium.args,
+        "--hide-scrollbars",
+        "--disable-web-security",
+        "--disable-extensions",
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath,
       headless: true,
