@@ -1,60 +1,32 @@
-import chromium from "chrome-aws-lambda";
+// pages/api/generate-pdf.js
+import htmlToPdf from "html-pdf";
 
-export default async function handler(req, res) {
-  try {
-    const { content } = req.body;
+export default function handler(req, res) {
+  // You should handle POST request with XML data in req.body
+  if (req.method === "POST") {
+    const xmlData = req.body;
+    const htmlData = convertXmlToHtml(xmlData);
 
-    if (!content) {
-      throw new Error("Content is missing");
-    }
+    // Generate PDF
+    htmlToPdf.create(htmlData).toBuffer((err, buffer) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error generating PDF");
+        return;
+      }
 
-    console.log("defaultViewportdefaultViewport", chromium.defaultViewport);
-    console.log("executablePathexecutablePath", await chromium.executablePath);
-
-    const browser = await chromium.puppeteer.launch({
-      args: [
-        ...chromium.args,
-        "--hide-scrollbars",
-        "--disable-web-security",
-        "--disable-extensions",
-      ],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: true,
-      ignoreHTTPSErrors: true,
+      // Send the PDF as response
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=sample.pdf");
+      res.send(buffer);
     });
-
-    console.log("browser", browser);
-
-    const page = await browser.newPage();
-
-    const html = `
-      <html>
-        <head>
-          <title>Dynamic PDF</title>
-        </head>
-        <body>
-          <h1>Dynamic PDF Content</h1>
-          <p>${content}</p>
-        </body>
-      </html>
-    `;
-
-    await page.setContent(html);
-
-    const pdfBuffer = await page.pdf({ format: "A4" });
-
-    await browser.close();
-
-    res.setHeader("Content-Type", "application/pdf");
-    // res.setHeader(
-    //   'Content-Disposition',
-    //   'attachment; filename="generated_pdf.pdf"'
-    // );
-
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    res.status(500).json({ error: "PDF generation failed" });
+  } else {
+    res.status(405).end(); // Method Not Allowed
   }
 }
+
+const convertXmlToHtml = (xmlData) => {
+  // Your XML to HTML conversion logic here
+  // You might use a library like xml2js or custom parsing
+  return `<html><body>${xmlData}</body></html>`;
+};
