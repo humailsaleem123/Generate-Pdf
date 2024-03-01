@@ -1,11 +1,39 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
+import Head from "next/head";
+import Image from "next/image";
+import { Inter } from "next/font/google";
+import styles from "@/styles/Home.module.css";
+import axios from "axios";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const generatePdf = async () => {
+    const message = "HUMAIL SALEEM";
+    try {
+      const response = await axios.post(
+        `/api/generatePdf`,
+        { content: message },
+        { responseType: "blob" }
+      );
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "generated_pdf.pdf";
+      document.body.appendChild(a);
+
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
+  };
+
   return (
     <>
       <Head>
@@ -20,13 +48,16 @@ export default function Home() {
             Get started by editing&nbsp;
             <code className={styles.code}>src/pages/index.js</code>
           </p>
+          <button className={styles.card} onClick={generatePdf}>
+            Generate Pdf
+          </button>
           <div>
             <a
               href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
               target="_blank"
               rel="noopener noreferrer"
             >
-              By{' '}
+              By{" "}
               <Image
                 src="/vercel.svg"
                 alt="Vercel Logo"
@@ -110,5 +141,5 @@ export default function Home() {
         </div>
       </main>
     </>
-  )
+  );
 }
